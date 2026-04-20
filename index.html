@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  >
+  <title>녹십자아이메드 복용약 조회</title>
+
+  <link rel="stylesheet" href="./assets/css/variables.css">
+  <link rel="stylesheet" href="./assets/css/main.css">
+</head>
+
+<body>
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div class="loading-title" id="loadingTitle">불러오는 중</div>
+      <div class="loading-desc" id="loadingMessage">초기 데이터를 준비하고 있습니다.</div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="app-topbar">
+      <div class="app-topbar-inner">
+        <div class="topbar-brand" id="secretAdminTrigger">
+          <img src="./assets/logo.png" alt="녹십자아이메드 로고" class="brand-full-logo">
+          <div class="brand-meta">
+            <div class="brand-sub-row">
+              <div class="brand-sub">복용약 조회 서비스</div>
+              <div class="hero-mode hidden" id="heroModeLabel">환자용</div>
+            </div>
+          </div>
+
+        <div class="topbar-actions">
+          <button class="btn secondary hidden" id="homeBtn">처음으로</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="landing-panel" id="landingPanel">
+      <div class="landing-title">복용약 조회</div>
+
+      <div class="landing-desc">
+        복용 중인 약 이름이나 정보를 입력하면 중단 여부와 관련 검사 기준을 확인할 수 있습니다.
+      </div>
+
+      <div class="landing-grid">
+        <div class="landing-action-card primary">
+          <div class="landing-action-top">
+            <button class="landing-action-btn" id="startPatientBtn">
+              환자용 안내
+            </button>
+          </div>
+          <div class="landing-action-bottom">
+            <span class="landing-action-label">환자용</span>
+            <span class="landing-action-desc">쉽고 이해하기 쉬운 문구로 복용약 안내를 확인합니다.</span>
+          </div>
+        </div>
+
+        <div class="landing-action-card secondary">
+          <div class="landing-action-top">
+            <button class="landing-action-btn" id="startStaffBtn">
+              직원용 조회
+            </button>
+          </div>
+          <div class="landing-action-bottom">
+            <span class="landing-action-label">직원용</span>
+            <span class="landing-action-desc">검사 기준, 예외 사항, 참고 메모까지 함께 조회합니다.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero hidden" id="heroSection">
+      <div class="hero-title-row">
+        <h1 id="appTitle">복용약 안내</h1>
+      </div>
+      <p id="heroDescription">복용약의 중단 여부를 쉽고 빠르게 확인할 수 있습니다.</p>
+      <div class="top-note hidden" id="topNotice">복용약은 임의로 중단하지 말고, 반드시 검진센터 또는 처방의와 상담 후 결정하세요.</div>
+    </section>
+
+    <section class="panel hidden" id="mainPanel">
+      <div class="mode-switch">
+        <button class="mode-btn active" id="patientModeBtn">환자용 안내</button>
+        <button class="mode-btn" id="staffModeBtn">직원용 조회</button>
+        <button class="mode-btn hidden" id="adminModeBtn">관리자</button>
+      </div>
+      <div id="searchSection">
+        <div class="search-layout">
+          <div class="search-card">
+            <div class="keyword-search-row">
+              <div class="field" id="keywordField">
+                  <label for="keyword">
+                    검색어 입력 (2글자 이상)<br>
+                    <span class="keyword-label-sub">쉼표(,) 또는 띄어쓰기로 구분 가능</span>
+                  </label>
+                  <textarea id="keyword" class="textarea"
+                  placeholder="약 이름, 주성분, 질병명 입력 (여러 개 입력 가능)&#10;예: 아스피린, 당뇨, 혈전"></textarea>
+                <div class="autocomplete" id="autocompleteBox"></div>
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button class="search-inline-btn" id="searchBtn">조회</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="search-card">
+            <div class="field">
+              <label for="examType">검사 종류</label>
+              <div class="select-wrap">
+                <select id="examType" class="select"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="search-actions">
+            <button class="btn primary" id="searchBtnMobile" style="width:100%;min-height:54px;">
+              조회
+            </button>
+          </div>
+        </div>
+
+        <div class="status hidden" id="statusText"></div>
+        <div id="summaryArea"></div>
+        <div id="groupArea"></div>
+      </div>
+
+      <div class="footer-note" id="footerNotice"></div>
+    </section>
+
+    <section class="admin-panel hidden" id="adminPanel">
+      <div class="admin-switch">
+        <button class="admin-btn active" id="adminTabDrug">약물 관리</button>
+        <button class="admin-btn" id="adminTabRule">규칙 관리</button>
+        <button class="admin-btn" id="adminTabStats">통계</button>
+        <button class="btn secondary" id="closeAdminPanelBtn">닫기</button>
+      </div>
+
+      <div id="adminLoginArea" class="admin-login-box hidden">
+        <h3 class="admin-section-title">관리자 로그인</h3>
+        <div class="grid-2">
+          <div class="field">
+            <label for="adminPassword">비밀번호</label>
+            <input type="password" id="adminPassword" class="input" placeholder="관리자 비밀번호 입력">
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn primary" id="adminLoginBtn" style="width:100%;min-height:52px;">
+              로그인
+            </button>
+          </div>
+        </div>
+        <div class="status" id="adminLoginStatus"></div>
+      </div>
+
+      <div id="adminContentArea" class="hidden">
+        <div id="adminDrugPane">
+          <div class="grid-admin">
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">약물 추가 / 수정</h3>
+              <div class="status" id="adminDrugStatus"></div>  
+              <div class="required-note">* 표시 항목은 필수 입력입니다.</div>  
+              
+              <div class="field admin-search-field">
+                <label class="label-optional">약물 검색</label>
+                <input id="adminDrugSearch" class="input" placeholder="약품명, 성분명, drug_id 검색">
+              </div>
+              
+              <div class="toolbar admin-search-toolbar">
+                <button class="btn secondary" id="adminDrugSearchBtn">검색</button>
+                <button class="btn secondary" id="adminDrugRecentBtn">최근목록</button>
+                <button class="btn secondary" id="adminDrugNewBtn">신규입력</button>
+              </div>
+              
+              <div class="admin-list compact-empty" id="adminDrugSearchList"></div>
+              
+              <input type="hidden" id="adminDrugId">
+              
+              <div class="grid-2" style="margin-top:14px;">
+                <div class="field">
+                  <label class="label-required">약품명 <span class="required-mark">*</span></label>
+                  <input id="adminBrandName" class="input">
+                </div>
+              
+                <div class="field">
+                  <label class="label-required">성분명 <span class="required-mark">*</span></label>
+                  <input id="adminIngredientName" class="input">
+                </div>
+              
+                <div class="field">
+                  <label class="label-required">약물군 <span class="required-mark">*</span></label>
+                  <div class="admin-select-wrap">
+                    <select id="adminDrugGroup" class="select"></select>
+                  </div>
+                </div>
+              
+                <div class="field">
+                  <label class="label-optional">주의수준</label>
+                  <div class="admin-select-wrap">
+                    <select id="adminCautionLevel" class="select">
+                      <option value="일반">일반</option>
+                      <option value="중간">중간</option>
+                      <option value="높음">높음</option>
+                      <option value="매우높음">매우높음</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="grid-2" style="margin-top:18px;">
+                <div class="field">
+                  <label class="label-optional">검색 별칭</label>
+                  <input id="adminAliases" class="input">
+                </div>
+              
+                <div class="field">
+                  <label class="label-optional">환자용 키워드</label>
+                  <input id="adminPatientKeywords" class="input">
+                </div>
+              </div>
+              
+              <div class="grid-2" style="margin-top:18px;">
+                <div class="field">
+                  <label class="label-optional">일반 용도</label>
+                  <input id="adminCommonUse" class="input">
+                </div>
+              
+                <div class="field">
+                  <label class="label-optional">사용 여부</label>
+                  <div class="admin-select-wrap">
+                    <select id="adminDrugActive" class="select">
+                      <option value="Y">Y</option>
+                      <option value="N">N</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="field" style="margin-top:18px;">
+                <label class="label-optional">직원 참고 메모</label>
+                <textarea id="adminStaffNote" class="textarea"></textarea>
+              </div>
+              
+              <div class="admin-action-toolbar">
+                <button class="btn primary" id="saveDrugBtn">저장</button>
+                <button class="btn secondary" id="toggleCurrentDrugBtn">활성/비활성 전환</button>
+              </div>
+              </div>
+              
+              <div class="admin-content-box">
+                <h3 class="admin-section-title">최근 등록 약물</h3>
+                <div class="admin-list" id="recentDrugList"></div>
+              </div>
+          </div>
+        </div>
+
+        <div id="adminRulePane" class="hidden">
+          <div class="grid-admin">
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">규칙 추가 / 수정</h3>
+              <div class="required-note">* 표시 항목은 필수 입력입니다.</div>
+              
+              <div class="field admin-search-field">
+                <label class="label-optional">규칙 검색</label>
+                <input id="adminRuleSearch" class="input" placeholder="rule_id, 검사종류, 약물군명, drug_id, 약품명 검색">
+              </div>
+              
+              <div class="toolbar admin-search-toolbar">
+                <button class="btn secondary" id="adminRuleSearchBtn">검색</button>
+                <button class="btn secondary" id="adminRuleRecentBtn">최근목록</button>
+                <button class="btn secondary" id="adminRuleNewBtn">신규입력</button>
+              </div>
+              
+              <div class="admin-list compact-empty" id="adminRuleSearchList"></div>
+              
+              <input type="hidden" id="adminRuleId">
+              
+              <div class="grid-2" style="margin-top:14px;">
+                <div class="field">
+                  <label class="label-required">검사 종류 <span class="required-mark">*</span></label>
+                  <div class="admin-select-wrap">
+                    <select id="adminExamType" class="select"></select>
+                  </div>
+                </div>
+              
+                <div class="field">
+                  <label class="label-required">적용 기준 <span class="required-mark">*</span></label>
+                  <div class="admin-select-wrap">
+                    <select id="adminTargetType" class="select">
+                      <option value="group">group</option>
+                      <option value="drug">drug</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="grid-2" style="margin-top:12px;">
+                <div class="field">
+                  <label class="label-required">적용 대상 값 <span class="required-mark">*</span></label>
+                
+                  <input type="hidden" id="adminTargetValue">
+                
+                  <div id="adminTargetValueGroupWrap" class="admin-select-wrap">
+                    <select id="adminTargetValueGroup" class="select"></select>
+                  </div>
+                
+                  <div id="adminTargetValueDrugWrap" class="hidden">
+                    <input id="adminTargetDrugSearch" class="input" placeholder="약품명, 성분명, drug_id 검색">
+                    <div class="admin-list compact-empty" id="adminTargetDrugSearchList" style="margin-top:8px;"></div>
+                    <div class="small" id="adminTargetDrugSelected" style="margin-top:8px;color:#1f6f98;font-weight:700;"></div>
+                  </div>
+                </div>
+              
+                <div class="field">
+                  <label class="label-optional">주의수준</label>
+                  <div class="admin-select-wrap">
+                    <select id="adminRuleCautionLevel" class="select">
+                    <option value="일반">일반</option>
+                    <option value="중간">중간</option>
+                    <option value="높음">높음</option>
+                    <option value="매우높음">매우높음</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="grid-2" style="margin-top:12px;">
+                <div class="field">
+                  <label class="label-optional">중단 필요 여부</label>
+                  <div class="admin-select-wrap">
+                    <select id="adminNeedHold" class="select">
+                      <option value="Y">Y</option>
+                      <option value="N">N</option>
+                      <option value="CONSULT">CONSULT</option>
+                    </select>
+                  </div>
+                </div>
+              
+                <div class="field">
+                  <label class="label-optional">중단 기간</label>
+                  <input id="adminHoldPeriod" class="input">
+                </div>
+              </div>
+              
+              <div class="field" style="margin-top:12px;">
+                <label class="label-optional">환자 참고사항</label>
+                <textarea id="adminPatientMessage" class="textarea"></textarea>
+              </div>
+              
+              <div class="field" style="margin-top:12px;">
+                <label class="label-optional">직원 참고사항</label>
+                <textarea id="adminStaffMessage" class="textarea"></textarea>
+              </div>
+              
+              <div class="field" style="margin-top:12px;">
+                <label class="label-optional">예외 사항</label>
+                <textarea id="adminExceptionNote" class="textarea"></textarea>
+              </div>
+              
+              <div class="grid-2" style="margin-top:12px;">
+                <div class="field">
+                  <label class="label-optional">사용 여부</label>
+                  <div class="admin-select-wrap">
+                    <select id="adminRuleActive" class="select">
+                      <option value="Y">Y</option>
+                      <option value="N">N</option>
+                    </select>
+                  </div>
+                </div>
+              
+                <div class="field">
+                  <label class="label-optional">우선순위(priority)</label>
+                  <input id="adminPriority" class="input" value="9">
+                </div>
+              </div>
+
+              <div class="admin-action-toolbar">
+                <button class="btn primary" id="saveRuleBtn">저장</button>
+                <button class="btn secondary" id="toggleCurrentRuleBtn">활성/비활성 전환</button>
+              </div>
+              <div class="status" id="adminRuleStatus"></div>
+            </div>
+
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">최근 등록 규칙</h3>
+              <div class="admin-list" id="recentRuleList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="adminStatsPane" class="hidden">
+          <div class="grid-admin">
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">검색 통계 요약</h3>
+              <div class="summary-wrap" id="statsSummaryWrap"></div>
+            </div>
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">상위 검색어</h3>
+              <div class="admin-list" id="statsKeywordList"></div>
+            </div>
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">상위 검사</h3>
+              <div class="admin-list" id="statsExamList"></div>
+            </div>
+            <div class="admin-content-box">
+              <h3 class="admin-section-title">상위 결과 약물</h3>
+              <div class="admin-list" id="statsResultList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+  <script src="./assets/js/config.js"></script>
+  <script src="./assets/js/utils.js"></script>
+  <script src="./assets/js/api.js"></script>
+  <script src="./assets/js/ui.js"></script>
+  <script src="./assets/js/search.js"></script>
+  <script src="./assets/js/admin.js"></script>
+  <script src="./assets/js/app.js"></script>
+
+</body>
+</html>
